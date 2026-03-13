@@ -1,0 +1,665 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>One Point Lesson Generator</title>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+
+<style>
+*{margin:0;padding:0;box-sizing:border-box;}
+
+body{
+    font-family:'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    padding:20px;
+    min-height:100vh;
+    background:linear-gradient(135deg,#667eea,#764ba2);
+}
+
+/* ── Container ── */
+.opl-container{
+    position:relative;
+    max-width:950px;
+    margin:auto;
+    padding:40px;
+    border-radius:12px;
+    box-shadow:0 20px 60px rgba(0,0,0,0.3);
+    background:#fff;
+}
+
+/* ── Logo ── */
+.logo-area{
+    position:absolute;
+    top:20px;
+    right:40px;
+    display:flex;
+    flex-direction:column;
+    align-items:flex-end;
+    z-index:10;
+}
+
+#logo-wrapper{
+    border:2px dashed #cbd5e1;
+    padding:5px;
+    min-width:120px;
+    min-height:60px;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    cursor:pointer;
+    background:#f8fafc;
+    border-radius:6px;
+    transition:.2s;
+}
+
+#logo-wrapper:hover{ border-color:#3b82f6; background:#eff6ff; }
+
+#logoPreview{
+    display:none;
+    width:120px;
+    max-height:80px;
+    object-fit:contain;
+}
+
+.logo-upload-text{
+    font-size:10px;
+    color:#94a3b8;
+    text-align:center;
+    line-height:1.4;
+}
+
+.logo-resize{
+    margin-top:6px;
+    display:flex;
+    align-items:center;
+    gap:6px;
+    font-size:11px;
+    color:#64748b;
+    font-weight:600;
+}
+
+/* ── Title ── */
+.opl-title{
+    text-align:center;
+    font-size:32px;
+    font-weight:800;
+    color:#1e40af;
+    margin-bottom:30px;
+    text-transform:uppercase;
+    letter-spacing:1px;
+    padding-right:140px; /* avoid logo overlap */
+}
+
+/* ── Editable base ── */
+[contenteditable]{
+    outline:none;
+    cursor:text;
+    border-radius:3px;
+    transition:background .15s;
+}
+
+[contenteditable]:hover{ background:rgba(59,130,246,0.04); }
+[contenteditable]:focus{ background:rgba(59,130,246,0.08); }
+
+/* ── Field (data entry box) ── */
+.field{
+    width:100%;
+    min-height:36px;
+    padding:8px 10px;
+    border:1px solid #cbd5e1;
+    border-radius:6px;
+    font-size:14px;
+    font-family:inherit;
+    white-space:pre-wrap;
+    word-break:break-word;
+    line-height:1.5;
+}
+
+.field:focus{ border-color:#3b82f6; box-shadow:0 0 0 3px rgba(59,130,246,0.1); }
+
+.field[data-placeholder]:empty::before,
+.subject-field[data-placeholder]:empty::before,
+.describe-field[data-placeholder]:empty::before{
+    content:attr(data-placeholder);
+    color:#94a3b8;
+    pointer-events:none;
+}
+
+/* ── Location row ── */
+.location-row{
+    display:grid;
+    grid-template-columns:1fr 1fr;
+    gap:15px;
+    margin-bottom:20px;
+}
+
+.location-label{
+    font-size:11px;
+    font-weight:700;
+    color:#475569;
+    text-transform:uppercase;
+    margin-bottom:4px;
+}
+
+/* ── Header section ── */
+.header-section{
+    display:grid;
+    grid-template-columns:1.5fr 1fr;
+    gap:30px;
+    margin-bottom:25px;
+}
+
+.form-row{
+    display:flex;
+    gap:10px;
+    align-items:flex-start;
+    margin-bottom:10px;
+}
+
+.form-label{
+    min-width:90px;
+    font-weight:600;
+    font-size:14px;
+    color:#334155;
+    padding-top:9px;
+    flex-shrink:0;
+}
+
+.date-input{
+    flex:1;
+    padding:8px 10px;
+    border:1px solid #cbd5e1;
+    border-radius:6px;
+    font-size:14px;
+    font-family:inherit;
+}
+
+/* ── Subject ── */
+.subject-section{
+    border:2px solid #3b82f6;
+    padding:20px;
+    border-radius:10px;
+    background:#f0f7ff;
+    margin-bottom:25px;
+}
+
+.subject-label{
+    font-size:13px;
+    font-weight:800;
+    color:#1e40af;
+    text-transform:uppercase;
+    margin-bottom:8px;
+}
+
+.subject-field{
+    width:100%;
+    min-height:40px;
+    padding:10px;
+    border:1px solid #3b82f6;
+    border-radius:6px;
+    font-size:16px;
+    font-weight:600;
+    font-family:inherit;
+    background:white;
+    white-space:pre-wrap;
+    word-break:break-word;
+    line-height:1.5;
+}
+
+.subject-field:focus{ box-shadow:0 0 0 3px rgba(59,130,246,0.15); }
+
+.category-grid{
+    display:grid;
+    grid-template-columns:repeat(4,1fr);
+    gap:10px;
+    margin-top:15px;
+}
+
+.category-item{
+    background:white;
+    border:2px solid #3b82f6;
+    padding:10px;
+    text-align:center;
+    border-radius:6px;
+    cursor:pointer;
+    font-size:13px;
+    font-weight:600;
+    color:#3b82f6;
+    user-select:none;
+    transition:.2s;
+}
+
+.cat-check{
+    font-size:15px;
+    margin-right:4px;
+    font-style:normal;
+}
+
+.category-item.selected{ background:#3b82f6; color:white; }
+
+
+/* ── Content boxes ── */
+.content-section{
+    display:grid;
+    grid-template-columns:1fr 1fr;
+    gap:25px;
+    margin-bottom:25px;
+}
+
+.content-box{
+    padding:20px;
+    border-radius:12px;
+    display:flex;
+    flex-direction:column;
+    gap:10px;
+}
+
+.wrong-box{ border:4px solid #ef4444; background:#fef2f2; }
+.correct-box{ border:4px solid #22c55e; background:#f0fdf4; }
+
+.content-header{
+    text-align:center;
+    font-size:22px;
+    font-weight:900;
+}
+
+.wrong-box .content-header{ color:#dc2626; }
+.correct-box .content-header{ color:#16a34a; }
+
+.preview-img{
+    width:100%;
+    max-height:220px;
+    object-fit:contain;
+    display:none;
+    border-radius:8px;
+    background:white;
+    border:1px solid #ddd;
+}
+
+.upload-btn{
+    display:inline-block;
+    padding:6px 14px;
+    background:#e0f2fe;
+    border:1px solid #38bdf8;
+    border-radius:5px;
+    font-size:12px;
+    font-weight:600;
+    color:#0369a1;
+    cursor:pointer;
+    align-self:flex-start;
+}
+
+.upload-btn input{ display:none; }
+
+.describe-field{
+    min-height:100px;
+    padding:12px;
+    border:1px solid #cbd5e1;
+    border-radius:8px;
+    font-size:14px;
+    font-family:inherit;
+    background:white;
+    white-space:pre-wrap;
+    word-break:break-word;
+    line-height:1.6;
+}
+
+.describe-field:focus{ border-color:#3b82f6; box-shadow:0 0 0 3px rgba(59,130,246,0.08); }
+
+/* ── Approval ── */
+.approval-section{
+    display:flex;
+    gap:40px;
+    margin-bottom:10px;
+}
+
+.sig-block{ flex:1; }
+
+.signature-line{
+    border-bottom:2px solid #334155;
+    height:40px;
+    margin-bottom:10px;
+}
+
+/* ── Buttons ── */
+.action-bar{
+    display:flex;
+    justify-content:center;
+    gap:12px;
+    margin-top:30px;
+    flex-wrap:wrap;
+}
+
+.btn{
+    padding:12px 24px;
+    border:none;
+    border-radius:8px;
+    font-size:14px;
+    font-weight:700;
+    cursor:pointer;
+    transition:all .2s;
+    display:flex;
+    align-items:center;
+    gap:6px;
+}
+
+.btn:hover{ transform:translateY(-1px); }
+.btn-print{ background:#1e40af; color:white; }
+.btn-print:hover{ background:#1e3a8a; }
+.btn-img{ background:#0f766e; color:white; }
+.btn-img:hover{ background:#0d6457; }
+.btn-reset{ background:#f1f5f9; color:#334155; border:1px solid #cbd5e1; }
+.btn-reset:hover{ background:#e2e8f0; }
+
+/* ── Export loading state ── */
+.btn:disabled{ opacity:.6; cursor:not-allowed; transform:none; }
+
+/* ── Print ── */
+@media print{
+    body{ background:none; padding:0; }
+    .opl-container{ box-shadow:none; padding:20px; }
+    .action-bar, .logo-resize, .upload-btn, .logo-upload-text{ display:none !important; }
+    #logo-wrapper{ border:none !important; background:none !important; }
+    .category-item{ -webkit-print-color-adjust:exact; print-color-adjust:exact; }
+    .category-item.selected{ background:#3b82f6 !important; color:white !important; }
+    .wrong-box, .correct-box, .subject-section{ -webkit-print-color-adjust:exact; print-color-adjust:exact; }
+}
+</style>
+</head>
+<body>
+
+<div class="opl-container" id="oplDoc">
+
+    <!-- Logo -->
+    <div class="logo-area">
+        <div id="logo-wrapper" onclick="document.getElementById('logoInput').click()">
+            <img id="logoPreview">
+            <div class="logo-upload-text" id="logoLabel">📤 Upload<br>Logo</div>
+            <input type="file" id="logoInput" accept="image/*" style="display:none" onchange="previewLogo(event)">
+        </div>
+        <div class="logo-resize">
+            <span>Size</span>
+            <input type="range" min="60" max="300" value="120" oninput="resizeLogo(this.value)">
+        </div>
+    </div>
+
+    <h1 class="opl-title">One Point Lesson</h1>
+
+    <!-- Location -->
+    <div class="location-row">
+        <div>
+            <div class="location-label" contenteditable>Location</div>
+            <div class="field" contenteditable data-placeholder="Plant Name"></div>
+        </div>
+        <div>
+            <div class="location-label" contenteditable>Area</div>
+            <div class="field" contenteditable data-placeholder="Production / Warehouse"></div>
+        </div>
+    </div>
+
+    <!-- Header Info -->
+    <div class="header-section">
+        <div>
+            <div class="form-row">
+                <div class="form-label" contenteditable>Theme:</div>
+                <div class="field" contenteditable data-placeholder="General theme" style="flex:1;min-width:0;"></div>
+            </div>
+            <div class="form-row">
+                <div class="form-label" contenteditable>Objective:</div>
+                <div class="field" contenteditable data-placeholder="What is the goal?" style="flex:1;min-width:0;"></div>
+            </div>
+        </div>
+        <div>
+            <div class="form-row">
+                <div class="form-label" contenteditable>OPL #:</div>
+                <div class="field" contenteditable data-placeholder="#0001" style="flex:1;min-width:0;"></div>
+            </div>
+            <div class="form-row">
+                <div class="form-label" contenteditable>Date:</div>
+                <input type="date" class="date-input" id="dateField">
+            </div>
+        </div>
+    </div>
+
+    <!-- Subject -->
+    <div class="subject-section">
+        <div class="subject-label" contenteditable>Subject:</div>
+        <div class="subject-field" contenteditable data-placeholder="e.g., Proper Safety Lock-out Procedure"></div>
+        <div class="category-grid">
+            <div class="category-item" onclick="toggleCategory(this)"><span class="cat-check">☐</span> Safety</div>
+            <div class="category-item" onclick="toggleCategory(this)"><span class="cat-check">☐</span> Basic Knowledge</div>
+            <div class="category-item" onclick="toggleCategory(this)"><span class="cat-check">☐</span> Improvement</div>
+            <div class="category-item" onclick="toggleCategory(this)"><span class="cat-check">☐</span> Trouble</div>
+        </div>
+    </div>
+
+    <!-- DON'T / DO -->
+    <div class="content-section">
+        <div class="content-box wrong-box">
+            <div class="content-header" contenteditable>✕ DON'T</div>
+            <label class="upload-btn">
+                📷 Upload Image
+                <input type="file" accept="image/*" onchange="previewImage(event,'wrongPreview',this)">
+            </label>
+            <img id="wrongPreview" class="preview-img">
+            <div class="describe-field" contenteditable data-placeholder="Describe the incorrect method or hazard..."></div>
+        </div>
+        <div class="content-box correct-box">
+            <div class="content-header" contenteditable>✓ DO</div>
+            <label class="upload-btn">
+                📷 Upload Image
+                <input type="file" accept="image/*" onchange="previewImage(event,'correctPreview',this)">
+            </label>
+            <img id="correctPreview" class="preview-img">
+            <div class="describe-field" contenteditable data-placeholder="Describe the correct standard procedure..."></div>
+        </div>
+    </div>
+
+    <!-- Approval -->
+    <div class="approval-section">
+        <div class="sig-block">
+            <div class="location-label" contenteditable style="margin-bottom:6px;">Prepared by:</div>
+            <div class="signature-line"></div>
+            <div class="field" contenteditable data-placeholder="Name & Date"></div>
+        </div>
+        <div class="sig-block">
+            <div class="location-label" contenteditable style="margin-bottom:6px;">Approved by:</div>
+            <div class="signature-line"></div>
+            <div class="field" contenteditable data-placeholder="Name & Date"></div>
+        </div>
+    </div>
+
+    <!-- Buttons -->
+    <div class="action-bar" id="actionBar">
+        <button class="btn btn-print" id="btnPDF" onclick="exportPDF()">📄 Export PDF</button>
+        <button class="btn btn-img" id="btnImg" onclick="exportImage()">🖼️ Export Image</button>
+        <button class="btn btn-reset" onclick="resetForm()">↺ Reset</button>
+    </div>
+
+</div>
+
+<script>
+/* ── Init ── */
+document.getElementById("dateField").valueAsDate = new Date();
+
+/* ── Category ── */
+function toggleCategory(el){
+    el.classList.toggle("selected");
+    const chk = el.querySelector(".cat-check");
+    if(chk) chk.textContent = el.classList.contains("selected") ? "☑" : "☐";
+}
+
+/* ── Content image preview ── */
+function previewImage(e, id, inputEl){
+    const file = e.target.files[0];
+    if(!file) return;
+    const reader = new FileReader();
+    reader.onload = function(){
+        const img = document.getElementById(id);
+        img.src = reader.result;
+        img.style.display = "block";
+        inputEl.closest(".upload-btn").style.display = "none";
+    };
+    reader.readAsDataURL(file);
+}
+
+/* ── Logo ── */
+function previewLogo(e){
+    const file = e.target.files[0];
+    if(!file) return;
+    const reader = new FileReader();
+    reader.onload = function(){
+        const img = document.getElementById("logoPreview");
+        img.src = reader.result;
+        img.style.display = "block";
+        document.getElementById("logoLabel").style.display = "none";
+    };
+    reader.readAsDataURL(file);
+}
+
+function resizeLogo(val){
+    document.getElementById("logoPreview").style.width = val + "px";
+}
+
+/* ── Hide/show UI for export ── */
+function hideUI(){
+    const els = [];
+    // Elements to fully hide
+    ["#actionBar", ".logo-resize", ".logo-upload-text"].forEach(sel => {
+        document.querySelectorAll(sel).forEach(el => {
+            els.push({ el, display: el.style.display });
+            el.style.display = "none";
+        });
+    });
+    // Logo wrapper: remove border/bg
+    const lw = document.getElementById("logo-wrapper");
+    const lwState = { border: lw.style.border, background: lw.style.background };
+    lw.style.border = "none";
+    lw.style.background = "none";
+
+    // Remove hover/focus visual from contenteditable during capture
+    const style = document.createElement("style");
+    style.id = "__exportStyle";
+    style.textContent = `[contenteditable]:hover,[contenteditable]:focus{background:transparent!important;box-shadow:none!important;}`;
+    document.head.appendChild(style);
+
+    return function restoreUI(){
+        els.forEach(o => o.el.style.display = o.display);
+        lw.style.border = lwState.border;
+        lw.style.background = lwState.background;
+        const s = document.getElementById("__exportStyle");
+        if(s) s.remove();
+    };
+}
+
+/* ── Export PDF ── */
+function exportPDF(){
+    const btn = document.getElementById("btnPDF");
+    btn.disabled = true;
+    btn.textContent = "⏳ Exporting...";
+
+    const restore = hideUI();
+    const el = document.getElementById("oplDoc");
+
+    // Wait for repaint
+    requestAnimationFrame(() => requestAnimationFrame(() => {
+        html2pdf().set({
+            margin: 6,
+            filename: "One_Point_Lesson.pdf",
+            image: { type: "jpeg", quality: 0.98 },
+            html2canvas: {
+                scale: 2,
+                useCORS: true,
+                allowTaint: true,
+                backgroundColor: "#ffffff",
+                scrollX: 0,
+                scrollY: 0,
+                width:  el.scrollWidth,
+                height: el.scrollHeight,
+                windowWidth:  el.scrollWidth,
+                windowHeight: el.scrollHeight
+            },
+            jsPDF: { unit: "mm", format: "a4", orientation: "portrait" }
+        })
+        .from(el)
+        .save()
+        .then(() => {
+            restore();
+            btn.disabled = false;
+            btn.innerHTML = "📄 Export PDF";
+        })
+        .catch(err => {
+            restore();
+            btn.disabled = false;
+            btn.innerHTML = "📄 Export PDF";
+            alert("PDF export failed: " + err);
+        });
+    }));
+}
+
+/* ── Export Image ── */
+function exportImage(){
+    const btn = document.getElementById("btnImg");
+    btn.disabled = true;
+    btn.textContent = "⏳ Exporting...";
+
+    const restore = hideUI();
+    const el = document.getElementById("oplDoc");
+
+    requestAnimationFrame(() => requestAnimationFrame(() => {
+        html2canvas(el, {
+            scale: 2,
+            useCORS: true,
+            allowTaint: true,
+            backgroundColor: "#ffffff",
+            scrollX: 0,
+            scrollY: 0,
+            width:  el.scrollWidth,
+            height: el.scrollHeight,
+            windowWidth:  el.scrollWidth,
+            windowHeight: el.scrollHeight
+        })
+        .then(canvas => {
+            restore();
+            btn.disabled = false;
+            btn.innerHTML = "🖼️ Export Image";
+            const link = document.createElement("a");
+            link.download = "One_Point_Lesson.png";
+            link.href = canvas.toDataURL("image/png");
+            link.click();
+        })
+        .catch(err => {
+            restore();
+            btn.disabled = false;
+            btn.innerHTML = "🖼️ Export Image";
+            alert("Image export failed: " + err.message);
+        });
+    }));
+}
+
+/* ── Reset ── */
+function resetForm(){
+    if(!confirm("Reset all fields? This cannot be undone.")) return;
+    document.querySelectorAll("[contenteditable]").forEach(el => el.innerHTML = "");
+    document.getElementById("dateField").valueAsDate = new Date();
+    document.querySelectorAll(".category-item").forEach(el => {
+        el.classList.remove("selected");
+        const chk = el.querySelector(".cat-check");
+        if(chk) chk.textContent = "☐";
+    });
+    ["wrongPreview","correctPreview"].forEach(id => {
+        const img = document.getElementById(id);
+        img.src = ""; img.style.display = "none";
+    });
+    document.querySelectorAll(".upload-btn").forEach(el => el.style.display = "inline-block");
+    const logo = document.getElementById("logoPreview");
+    logo.src = ""; logo.style.display = "none";
+    document.getElementById("logoLabel").style.display = "block";
+    document.getElementById("logoInput").value = "";
+}
+</script>
+
+</body>
+</html>
