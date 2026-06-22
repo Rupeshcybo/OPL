@@ -1070,3 +1070,31 @@ document.addEventListener('click',()=>{
  setTimeout(()=>document.body.classList.remove('exporting'),3000);
 });
 </script>
+
+<script>
+(function(){
+  function hideRemoveBtns(){
+    document.querySelectorAll('.img-remove').forEach(b=>{
+      b.dataset.prevDisplay = b.style.display || '';
+      b.style.display='none';
+    });
+  }
+  function showRemoveBtns(){
+    document.querySelectorAll('.img-remove').forEach(b=>{
+      b.style.display = b.dataset.prevDisplay || '';
+    });
+  }
+
+  const oldHtml2Canvas = window.html2canvas;
+  if(oldHtml2Canvas){
+    window.html2canvas = async function(){
+      hideRemoveBtns();
+      try{
+        return await oldHtml2Canvas.apply(this, arguments);
+      } finally {
+        setTimeout(showRemoveBtns,500);
+      }
+    }
+  }
+})();
+</script>
