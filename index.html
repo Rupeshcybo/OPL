@@ -5,7 +5,6 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>OPL - One Point Lesson</title>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <style>
 * { margin:0; padding:0; box-sizing:border-box; }
 body {
@@ -147,7 +146,7 @@ body {
 .meta-val {
   border:none; background:transparent; font-size:11px;
   font-family:Arial,sans-serif; color:#111; outline:none;
-  flex:1; padding:4px 6px;
+  flex:1; padding:4px 6px; overflow:visible; white-space:nowrap;
 }
 
 /* ══ ROW 2: Classification ══ */
@@ -186,25 +185,15 @@ body {
   background:transparent; font-size:12px;
   font-family:Arial,sans-serif; color:#111;
   outline:none; flex:1;
+  white-space:nowrap; overflow:visible;
+  min-width:0; cursor:text;
+}
+.theme-input:empty:before {
+  content: attr(data-placeholder);
+  color:#bbb; pointer-events:none;
 }
 
-/* ══ ROW 4: Don'ts / Do's ══ */
-.cols-row {
-  display:grid; grid-template-columns:1fr 1fr;
-  border-bottom:1.5px solid #555; min-height:auto; align-items:start;
-}
-.dont-col{background:#fdf1f1;border:4px solid #e53935;border-radius:20px;margin:12px;overflow:hidden;box-shadow:0 4px 15px rgba(0,0,0,.08);display:flex;flex-direction:column;}
-.do-col{background:#f1faf4;border:4px solid #2ecc71;border-radius:20px;margin:12px;overflow:hidden;box-shadow:0 4px 15px rgba(0,0,0,.08);display:flex;flex-direction:column;}
-
-.col-hdr {
-  text-align:center; font-size:16px; font-weight:bold;
-  color:#fff; padding:7px 0; letter-spacing:.5px; outline:none;
-}
-.dont-col .col-hdr{background:transparent;color:#d32f2f;font-size:30px;font-weight:700;padding:18px 0;}
-.do-col .col-hdr{background:transparent;color:#27ae60;font-size:30px;font-weight:700;padding:18px 0;}
-
-.col-body { display:flex; flex-direction:column; flex:1; } .dont-col .col-body{background:#ffebee;} .do-col .col-body{background:#e8f5e9;}
-
+/* ── Dual image layout ── */
 .img-zone {
   flex:3; border-bottom:1.5px solid #ddd;
   position:relative; display:flex;
@@ -212,27 +201,54 @@ body {
   background:#fafafa; overflow:hidden;
   min-height:260px; cursor:pointer;
 }
-.img-zone input[type=file] {
-  position:absolute; inset:0; opacity:0; cursor:pointer;
-  width:100%; height:100%; z-index:2;
+/* When 2 images: show side by side */
+.img-zone.has-two {
+  gap:0; padding:0; cursor:default;
 }
-.img-hint {
-  display:flex; flex-direction:column; align-items:center; gap:6px;
-  color:#bbb; font-size:12px; pointer-events:none; text-align:center;
+.img-slot {
+  flex:1; position:relative; display:flex;
+  align-items:center; justify-content:center;
+  height:100%; min-height:260px; overflow:hidden;
+  cursor:pointer;
 }
-.img-hint .icon { font-size:32px; color:#ccc; }
-.img-preview {
-  max-width:100%; max-height:100%; object-fit:contain;
-  display:none; position:absolute; z-index:1;
+.img-slot + .img-slot {
+  border-left:3px solid #ccc;
 }
-.img-zone.has-img .img-hint  { display:none; }
-.img-zone.has-img .img-preview { display:block; }
-.img-remove {
-  position:absolute; top:5px; right:5px;
-  background:linear-gradient(135deg,#d32f2f,#b71c1c); color:#fff; border:none; border-radius:3px;
-  font-size:10px; padding:2px 6px; cursor:pointer; z-index:5; display:none;
+.dont-col .img-slot + .img-slot { border-left-color:#e53935; }
+.do-col   .img-slot + .img-slot { border-left-color:#2ecc71; }
+.img-slot img {
+  max-width:100%; max-height:260px; object-fit:contain;
+  display:block;
 }
-.img-zone.has-img .img-remove { display:block; }
+.img-slot .slot-remove {
+  position:absolute; top:4px; right:4px;
+  background:rgba(0,0,0,.55); color:#fff; border:none;
+  border-radius:3px; font-size:10px; padding:2px 6px;
+  cursor:pointer; z-index:10; display:none;
+}
+.img-slot:hover .slot-remove { display:block; }
+/* Add-second-image button inside slot */
+.img-slot .add-hint {
+  display:flex; flex-direction:column; align-items:center;
+  gap:4px; color:#bbb; font-size:11px; pointer-events:none;
+}
+.img-slot .add-hint .icon { font-size:28px; color:#ccc; }
+.cols-row {
+  display:grid; grid-template-columns:1fr 1fr;
+  border-bottom:1.5px solid #555; min-height:auto; align-items:start;
+}
+.dont-col{background:#fdf1f1;border:4px solid #e53935;border-radius:20px;margin:12px;overflow:visible;box-shadow:0 4px 15px rgba(0,0,0,.08);display:flex;flex-direction:column;}
+.do-col{background:#f1faf4;border:4px solid #2ecc71;border-radius:20px;margin:12px;overflow:visible;box-shadow:0 4px 15px rgba(0,0,0,.08);display:flex;flex-direction:column;}
+
+.col-hdr {
+  text-align:center; font-size:16px; font-weight:bold;
+  color:#fff; padding:7px 0; letter-spacing:.5px; outline:none;
+}
+.dont-col .col-hdr{background:transparent;color:#d32f2f;font-size:30px;font-weight:700;padding:18px 14px;}
+.do-col .col-hdr{background:transparent;color:#27ae60;font-size:30px;font-weight:700;padding:18px 14px;}
+
+.col-body { display:flex; flex-direction:column; flex:1; } .dont-col .col-body{background:#ffebee;} .do-col .col-body{background:#e8f5e9;}
+
 
 .text-zone { flex:none; min-height:120px; height:auto; }
 .text-zone textarea { background:#fff;border:2px solid #e0e0e0;border-radius:16px;padding:16px;
@@ -339,6 +355,7 @@ padding:6px;
 .scale-group input[type=range]{width:90px;cursor:pointer;}
 #scale-display{font-size:11px;color:#555;min-width:30px;}
 </style>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
 </head>
 <body>
 
@@ -374,8 +391,7 @@ padding:6px;
 <div class="edit-tip">Click any text to edit it directly</div>
 
 <div class="action-bar">
-  <button class="btn-pdf"   onclick="downloadPDF()">Download PDF</button>
-  <button class="btn-img"   onclick="downloadImage()">Download Image</button>
+  <button class="btn-pdf" onclick="printOPL()">🖨 Print / Save PDF</button>
   <button class="btn-reset" onclick="resetForm()">Reset</button>
 </div>
 
@@ -394,19 +410,19 @@ padding:6px;
     <div class="hdr-meta">
       <div class="meta-row">
         <div class="meta-lbl">Doc No:</div>
-        <input class="meta-val" type="text" value="SSI2/QA/FT/017">
+        <div class="meta-val" contenteditable="true">SSI2/QA/FT/017</div>
       </div>
       <div class="meta-row">
         <div class="meta-lbl">Original Date:</div>
-        <input class="meta-val" type="text" value="24.04.2024">
+        <div class="meta-val" contenteditable="true">24.04.2024</div>
       </div>
       <div class="meta-row">
         <div class="meta-lbl">Revision Date:</div>
-        <input class="meta-val" type="text" value="01.07.2024">
+        <div class="meta-val" contenteditable="true">01.07.2024</div>
       </div>
       <div class="meta-row">
         <div class="meta-lbl">Revision No:</div>
-        <input class="meta-val" type="text" value="01">
+        <div class="meta-val" contenteditable="true">01</div>
       </div>
     </div>
   </div>
@@ -446,7 +462,7 @@ padding:6px;
   <!-- ROW 3: Theme -->
   <div class="theme-row">
     <span class="theme-label">Theme :</span>
-    <input class="theme-input" id="theme-input" type="text" value="Proper Way To Maintain Barcode Printing Log">
+    <div class="theme-input" id="theme-input" contenteditable="true" data-placeholder="Enter theme here..."></div>
   </div>
 
   <!-- ROW 4: Don'ts / Do's -->
@@ -454,14 +470,21 @@ padding:6px;
     <div class="dont-col">
       <div class="col-hdr" contenteditable="true">Don'ts</div>
       <div class="col-body">
-        <div class="img-zone" onclick="document.getElementById('dont-img-input').click()">
-          <input type="file" id="dont-img-input" accept="image/*" onchange="handleImageUpload(this, 'dont')">
-          <div class="img-hint">
-            <span class="icon">+</span>
-            <span>Click to upload image</span>
+        <div class="img-zone" id="dont-img-zone">
+          <input type="file" id="dont-img-input" accept="image/*" style="display:none" onchange="handleImageUpload(this,'dont')">
+          <input type="file" id="dont-img-input2" accept="image/*" style="display:none" onchange="handleImageUpload2(this,'dont')">
+          <!-- Slot 1 -->
+          <div class="img-slot" id="dont-slot1" onclick="document.getElementById('dont-img-input').click()">
+            <div class="add-hint"><span class="icon">+</span><span>Click to upload image</span></div>
+            <img id="dont-preview" src="" alt="" style="display:none">
+            <button class="slot-remove" onclick="event.stopPropagation();removeSlot('dont',1)">✕ Remove</button>
           </div>
-          <img class="img-preview" id="dont-preview" alt="Don'ts illustration">
-          <button class="img-remove" onclick="event.stopPropagation(); removeImage('dont')">Remove</button>
+          <!-- Slot 2: hidden until slot1 has image -->
+          <div class="img-slot" id="dont-slot2" style="display:none" onclick="document.getElementById('dont-img-input2').click()">
+            <div class="add-hint"><span class="icon">+</span><span>Add 2nd image</span></div>
+            <img id="dont-preview2" src="" alt="" style="display:none">
+            <button class="slot-remove" onclick="event.stopPropagation();removeSlot('dont',2)">✕ Remove</button>
+          </div>
         </div>
         <div class="text-zone">
           <div id="dont-text" class="rich-text" contenteditable="true" data-placeholder="Enter description of what NOT to do..."></div>
@@ -471,14 +494,21 @@ padding:6px;
     <div class="do-col">
       <div class="col-hdr" contenteditable="true">Do's</div>
       <div class="col-body">
-        <div class="img-zone" onclick="document.getElementById('do-img-input').click()">
-          <input type="file" id="do-img-input" accept="image/*" onchange="handleImageUpload(this, 'do')">
-          <div class="img-hint">
-            <span class="icon">+</span>
-            <span>Click to upload image</span>
+        <div class="img-zone" id="do-img-zone">
+          <input type="file" id="do-img-input" accept="image/*" style="display:none" onchange="handleImageUpload(this,'do')">
+          <input type="file" id="do-img-input2" accept="image/*" style="display:none" onchange="handleImageUpload2(this,'do')">
+          <!-- Slot 1 -->
+          <div class="img-slot" id="do-slot1" onclick="document.getElementById('do-img-input').click()">
+            <div class="add-hint"><span class="icon">+</span><span>Click to upload image</span></div>
+            <img id="do-preview" src="" alt="" style="display:none">
+            <button class="slot-remove" onclick="event.stopPropagation();removeSlot('do',1)">✕ Remove</button>
           </div>
-          <img class="img-preview" id="do-preview" alt="Do's illustration">
-          <button class="img-remove" onclick="event.stopPropagation(); removeImage('do')">Remove</button>
+          <!-- Slot 2: hidden until slot1 has image -->
+          <div class="img-slot" id="do-slot2" style="display:none" onclick="document.getElementById('do-img-input2').click()">
+            <div class="add-hint"><span class="icon">+</span><span>Add 2nd image</span></div>
+            <img id="do-preview2" src="" alt="" style="display:none">
+            <button class="slot-remove" onclick="event.stopPropagation();removeSlot('do',2)">✕ Remove</button>
+          </div>
         </div>
         <div class="text-zone">
           <div id="do-text" class="rich-text" contenteditable="true" data-placeholder="Enter description of what TO do..."></div>
@@ -657,7 +687,7 @@ function generateOPL() {
       };
     }
 
-    document.getElementById('theme-input').value = data.theme;
+    document.getElementById('theme-input').innerText = data.theme;
     document.getElementById('dont-text').innerText = data.donts;
     document.getElementById('do-text').innerText = data.dos;
 
@@ -686,94 +716,203 @@ function toggleCheckbox(el) {
 function handleImageUpload(input, side) {
   const file = input.files[0];
   if (!file) return;
-
   const reader = new FileReader();
   reader.onload = function(e) {
     const preview = document.getElementById(side + '-preview');
-    const zone = preview.closest('.img-zone');
+    const slot1   = document.getElementById(side + '-slot1');
+    const slot2   = document.getElementById(side + '-slot2');
+    const zone    = document.getElementById(side + '-img-zone');
+
+    // Show image in slot1, hide hint
     preview.src = e.target.result;
-    zone.classList.add('has-img');
-    showToast('Image uploaded successfully');
+    preview.style.display = 'block';
+    slot1.querySelector('.add-hint').style.display = 'none';
+
+    // Reveal slot2 for optional 2nd image
+    slot2.style.display = 'flex';
+    zone.style.display  = 'flex';
+    showToast('Image uploaded');
   };
   reader.readAsDataURL(file);
 }
 
+function handleImageUpload2(input, side) {
+  const file = input.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = function(e) {
+    const preview2 = document.getElementById(side + '-preview2');
+    const slot2    = document.getElementById(side + '-slot2');
+    const zone     = document.getElementById(side + '-img-zone');
+
+    preview2.src = e.target.result;
+    preview2.style.display = 'block';
+    slot2.querySelector('.add-hint').style.display = 'none';
+    zone.classList.add('has-two');
+    showToast('Second image uploaded');
+  };
+  reader.readAsDataURL(file);
+}
+
+function removeSlot(side, num) {
+  if (num === 1) {
+    // Remove slot1 image; also remove slot2 if exists
+    const preview  = document.getElementById(side + '-preview');
+    const preview2 = document.getElementById(side + '-preview2');
+    const slot1    = document.getElementById(side + '-slot1');
+    const slot2    = document.getElementById(side + '-slot2');
+    const zone     = document.getElementById(side + '-img-zone');
+
+    preview.src = ''; preview.style.display = 'none';
+    slot1.querySelector('.add-hint').style.display = 'flex';
+    document.getElementById(side + '-img-input').value = '';
+
+    // Also clear slot2
+    preview2.src = ''; preview2.style.display = 'none';
+    slot2.querySelector('.add-hint').style.display = 'flex';
+    document.getElementById(side + '-img-input2').value = '';
+    slot2.style.display = 'none';
+    zone.classList.remove('has-two');
+    showToast('Image removed');
+  } else {
+    // Remove only slot2
+    const preview2 = document.getElementById(side + '-preview2');
+    const slot2    = document.getElementById(side + '-slot2');
+    const zone     = document.getElementById(side + '-img-zone');
+
+    preview2.src = ''; preview2.style.display = 'none';
+    slot2.querySelector('.add-hint').style.display = 'flex';
+    document.getElementById(side + '-img-input2').value = '';
+    zone.classList.remove('has-two');
+    // Keep slot2 visible so user can add again
+    showToast('Second image removed');
+  }
+}
+
+// Legacy removeImage kept for resetForm compatibility
 function removeImage(side) {
-  const preview = document.getElementById(side + '-preview');
-  const input = document.getElementById(side + '-img-input');
-  const zone = preview.closest('.img-zone');
-  preview.src = '';
-  zone.classList.remove('has-img');
-  input.value = '';
-  showToast('Image removed');
+  removeSlot(side, 1);
+}
+
+// ── Shared: render sheet to canvas via SVG foreignObject ──
+async function renderSheetToCanvas(scale) {
+  const el = document.getElementById('opl-sheet');
+  const rect = el.getBoundingClientRect();
+  const w = Math.round(rect.width);
+  const h = Math.round(el.scrollHeight);
+
+  // Inline all stylesheets into a single <style> block
+  let cssText = '';
+  for (const sheet of document.styleSheets) {
+    try {
+      for (const rule of sheet.cssRules) cssText += rule.cssText + '\n';
+    } catch(e) {}
+  }
+
+  // Clone the node and inline computed styles to survive SVG sandboxing
+  const clone = el.cloneNode(true);
+  clone.style.width  = w + 'px';
+  clone.style.height = h + 'px';
+  clone.style.overflow = 'visible';
+
+  // Replace all <input> and <textarea> with <div> showing their value
+  clone.querySelectorAll('input[type=text], input:not([type])').forEach(inp => {
+    const div = document.createElement('div');
+    div.textContent = inp.value;
+    div.style.cssText = window.getComputedStyle(inp).cssText;
+    inp.replaceWith(div);
+  });
+  clone.querySelectorAll('textarea').forEach(ta => {
+    const div = document.createElement('div');
+    div.textContent = ta.value;
+    div.style.cssText = window.getComputedStyle(ta).cssText;
+    ta.replaceWith(div);
+  });
+
+  // Fix overflow on cols
+  clone.querySelectorAll('.dont-col,.do-col').forEach(c => c.style.overflow = 'visible');
+  clone.querySelectorAll('.col-hdr').forEach(c => { c.style.overflow = 'visible'; c.style.padding = '18px 14px'; });
+  clone.querySelectorAll('.meta-val,.theme-input').forEach(c => { c.style.overflow = 'visible'; c.style.whiteSpace = 'normal'; });
+
+  // Hide UI-only elements (file inputs, buttons except content)
+  clone.querySelectorAll('input[type=file], .img-remove, .slot-remove, .img-hint, .add-hint').forEach(e => e.style.display = 'none');
+
+  const html = clone.outerHTML;
+  const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="${w}" height="${h}">
+    <foreignObject width="100%" height="100%">
+      <div xmlns="http://www.w3.org/1999/xhtml">
+        <style>${cssText}</style>
+        ${html}
+      </div>
+    </foreignObject>
+  </svg>`;
+
+  const blob = new Blob([svg], {type: 'image/svg+xml;charset=utf-8'});
+  const url  = URL.createObjectURL(blob);
+
+  return new Promise((resolve, reject) => {
+    const img = new Image();
+    img.onload = function() {
+      const canvas = document.createElement('canvas');
+      canvas.width  = w * scale;
+      canvas.height = h * scale;
+      const ctx = canvas.getContext('2d');
+      ctx.scale(scale, scale);
+      ctx.fillStyle = '#ffffff';
+      ctx.fillRect(0, 0, w, h);
+      ctx.drawImage(img, 0, 0, w, h);
+      URL.revokeObjectURL(url);
+      resolve(canvas);
+    };
+    img.onerror = function(e) { URL.revokeObjectURL(url); reject(e); };
+    img.src = url;
+  });
 }
 
 // ── Download PDF ──
-async function downloadPDF() {
-  const btn = document.querySelector('.btn-pdf');
-  btn.style.opacity = '0.6';
-  btn.textContent = 'Generating...';
-
-  try {
-    const element = document.getElementById('opl-sheet');
-    const canvas = await html2canvas(element, {
-      scale: 2,
-      useCORS: true,
-      allowTaint: true,
-      backgroundColor: '#ffffff'
-    });
-
-    const imgData = canvas.toDataURL('image/png');
-    const { jsPDF } = window.jspdf;
-
-    const pdf = new jsPDF('l', 'mm', 'a4');
-    const pageWidth = pdf.internal.pageSize.getWidth();
-    const pageHeight = pdf.internal.pageSize.getHeight();
-    const imgWidth = canvas.width;
-    const imgHeight = canvas.height;
-    const ratio = Math.min(pageWidth / imgWidth, pageHeight / imgHeight);
-    const imgX = (pageWidth - imgWidth * ratio) / 2;
-    const imgY = 5;
-
-    pdf.addImage(imgData, 'PNG', imgX, imgY, imgWidth * ratio, imgHeight * ratio);
-    pdf.save('One_Point_Lesson.pdf');
-    showToast('PDF downloaded successfully');
-  } catch (err) {
-    console.error(err);
-    showToast('Error generating PDF');
-  } finally {
-    btn.style.opacity = '';
-    btn.textContent = 'Download PDF';
+async function old_downloadPDF() {
+  try{
+    const element=document.getElementById('opl-sheet');
+    await html2pdf().set({
+      margin:5,
+      filename:'OPL.pdf',
+      image:{type:'jpeg',quality:1},
+      html2canvas:{scale:2,useCORS:true},
+      jsPDF:{unit:'mm',format:'a4',orientation:'landscape'}
+    }).from(element).save();
+    showToast('PDF downloaded');
+  }catch(e){
+    console.error(e);
+    alert('PDF export failed: '+e.message);
   }
 }
 
 // ── Download Image ──
-async function downloadImage() {
-  const btn = document.querySelector('.btn-img');
-  btn.style.opacity = '0.6';
-  btn.textContent = 'Generating...';
-
+async function old_downloadImage() {
   try {
-    const element = document.getElementById('opl-sheet');
-    const canvas = await html2canvas(element, {
-      scale: 2,
-      useCORS: true,
-      allowTaint: true,
-      backgroundColor: '#ffffff'
+    const canvas = await html2canvas(document.getElementById('opl-sheet'),{
+      scale:2,
+      useCORS:true,
+      backgroundColor:'#ffffff'
     });
-
-    const link = document.createElement('a');
-    link.download = 'One_Point_Lesson.png';
-    link.href = canvas.toDataURL('image/png');
+    const link=document.createElement('a');
+    link.href=canvas.toDataURL('image/png');
+    link.download='OPL_Image.png';
     link.click();
-    showToast('Image downloaded successfully');
-  } catch (err) {
-    console.error(err);
-    showToast('Error generating image');
-  } finally {
-    btn.style.opacity = '';
-    btn.textContent = 'Download Image';
+    showToast('Image downloaded');
+  } catch(e){
+    console.error(e);
+    alert('Image export failed: '+e.message);
   }
+}
+
+
+function downloadPDF(){
+  return old_downloadPDF();
+}
+
+function downloadImage(){
+  return old_downloadImage();
 }
 
 // ── Reset ──
@@ -786,161 +925,3 @@ function resetForm() {
     } else if (el.classList.contains('hdr-company')) {
       el.textContent = 'SAATVIK SOLAR INDUSTRIES PRIVATE LIMITED';
     } else if (el.classList.contains('hdr-sub')) {
-      el.textContent = '(A unit of Saatvik Green Energy Private Limited)';
-    } else if (el.classList.contains('hdr-opl')) {
-      el.textContent = 'One Point Lesson';
-    } else {
-      el.textContent = '';
-    }
-  });
-
-  document.querySelectorAll('input[type="text"]').forEach(el => {
-    if (el.closest('.meta-row')) {
-      const lbl = el.previousElementSibling.textContent;
-      if (lbl.includes('Doc No')) el.value = 'SSI2/QA/FT/017';
-      else if (lbl.includes('Original')) el.value = '24.04.2024';
-      else if (lbl.includes('Revision Date')) el.value = '01.07.2024';
-      else if (lbl.includes('Revision No')) el.value = '01';
-    } else if (el.classList.contains('theme-input')) {
-      el.value = 'Proper Way To Maintain Barcode Printing Log';
-    } else {
-      el.value = '';
-    }
-  });
-
-  document.querySelectorAll('textarea').forEach(el => el.value = '');
-  document.getElementById('dont-text').innerHTML = '';
-  document.getElementById('do-text').innerHTML = '';
-  document.getElementById('ai-topic').value = '';
-
-  removeImage('dont');
-  removeImage('do');
-
-  const checkboxes = document.querySelectorAll('.chk-box');
-  const defaults = [true, false, true, true, false];
-  checkboxes.forEach((cb, i) => {
-    cb.setAttribute('aria-checked', defaults[i]);
-    cb.textContent = defaults[i] ? '✓' : '';
-  });
-
-  showToast('Form reset to defaults');
-}
-
-// ── Floating format toolbar ──
-const floatBar = document.getElementById('float-toolbar');
-let currentFontPx = 12;
-let savedRange = null;
-const sizeStepping = [8,9,10,11,12,13,14,15,16,18,20,22,24,26,28,32,36,40,48,56,64,72];
-
-function fmt(cmd) {
-  document.execCommand('styleWithCSS', false, true);
-  document.execCommand(cmd, false, null);
-}
-
-function fmtSize(delta) {
-  // Step the size
-  let idx = sizeStepping.findIndex(s => s >= currentFontPx);
-  if (idx === -1) idx = 4;
-  idx = Math.max(0, Math.min(sizeStepping.length - 1, idx + (delta > 0 ? 1 : -1)));
-  currentFontPx = sizeStepping[idx];
-  document.getElementById('ft-size').textContent = currentFontPx;
-
-  if (!savedRange) return;
-
-  // Restore selection
-  const sel = window.getSelection();
-  sel.removeAllRanges();
-  sel.addRange(savedRange);
-
-  // Extract selected content, wrap in span, reinsert
-  const span = document.createElement('span');
-  span.style.fontSize = currentFontPx + 'px';
-  const frag = savedRange.extractContents();
-  span.appendChild(frag);
-  savedRange.insertNode(span);
-
-  // Update savedRange to cover the new span
-  const newRange = document.createRange();
-  newRange.selectNodeContents(span);
-  sel.removeAllRanges();
-  sel.addRange(newRange);
-  savedRange = newRange.cloneRange();
-}
-
-function showFloatBar(x, y) {
-  floatBar.style.display = 'flex';
-  const bw = floatBar.offsetWidth || 280;
-  floatBar.style.left = Math.min(x, window.innerWidth - bw - 10) + 'px';
-  floatBar.style.top  = (y - 52) + 'px';
-}
-
-document.addEventListener('mouseup', function(e) {
-  if (floatBar.contains(e.target)) return;
-  setTimeout(() => {
-    const sel = window.getSelection();
-    if (!sel || sel.isCollapsed || !sel.toString().trim()) {
-      floatBar.style.display = 'none';
-      return;
-    }
-    // Only show inside rich-text zones
-    let node = sel.anchorNode;
-    let inRich = false;
-    while (node) {
-      if (node.classList && node.classList.contains('rich-text')) { inRich = true; break; }
-      node = node.parentNode;
-    }
-    if (!inRich) { floatBar.style.display = 'none'; return; }
-
-    const range = sel.getRangeAt(0);
-    savedRange = range.cloneRange();
-    const rect  = range.getBoundingClientRect();
-    showFloatBar(rect.left + rect.width / 2 - 130, rect.top + window.scrollY);
-
-    // Detect current font size
-    const el = sel.anchorNode.nodeType === 3 ? sel.anchorNode.parentElement : sel.anchorNode;
-    const fs = parseFloat(window.getComputedStyle(el).fontSize);
-    if (fs) {
-      currentFontPx = fs;
-      document.getElementById('ft-size').textContent = Math.round(fs);
-    }
-  }, 10);
-});
-
-document.addEventListener('mousedown', function(e) {
-  if (!floatBar.contains(e.target) && !e.target.closest('.rich-text')) {
-    floatBar.style.display = 'none';
-  }
-});
-
-// ── Global scale ──
-function applyGlobalScale(val) {
-  document.getElementById('opl-sheet').style.fontSize = val + '%';
-  document.getElementById('scale-display').textContent = val + '%';
-}
-
-// ── Keyboard accessibility for contenteditable ──
-document.querySelectorAll('[contenteditable]').forEach(el => {
-  el.addEventListener('keydown', function(e) {
-    if (e.key === 'Enter' && !e.shiftKey) {
-      e.preventDefault();
-      this.blur();
-    }
-  });
-});
-</script>
-
-
-<script>
-document.addEventListener('DOMContentLoaded', function(){
- document.querySelectorAll('textarea').forEach(function(txt){
-   function autoGrow(){
-     txt.style.height='auto';
-     txt.style.height=txt.scrollHeight+'px';
-   }
-   txt.addEventListener('input', autoGrow);
-   autoGrow();
- });
-});
-</script>
-</body>
-</html>
