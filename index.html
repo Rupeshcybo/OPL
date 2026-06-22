@@ -265,6 +265,40 @@ body {
 }
 #toast.show { opacity:1; }
 
+/* ── Floating format toolbar ── */
+#float-toolbar {
+  display:none; position:fixed; z-index:99999;
+  background:#1e1e1e; border-radius:8px; padding:5px 8px;
+  gap:3px; align-items:center;
+  box-shadow:0 4px 18px rgba(0,0,0,.45);
+}
+#float-toolbar button {
+  background:transparent; border:none; color:#fff;
+  padding:5px 9px; border-radius:5px; cursor:pointer;
+  font-size:13px; line-height:1; transition:background .15s;
+}
+#float-toolbar button:hover { background:rgba(255,255,255,.18); }
+#float-toolbar .ft-sep {
+  width:1px; height:18px; background:rgba(255,255,255,.25); margin:0 3px;
+}
+#ft-size {
+  color:#ffd54f; font-size:12px; font-weight:bold; min-width:22px; text-align:center;
+}
+
+/* ── Rich text zones ── */
+.rich-text {
+  width:100%; min-height:120px;
+  font-size:12px; font-family:Arial,sans-serif; color:#111;
+  outline:none; padding:8px;
+  white-space:pre-wrap; word-break:break-word;
+  line-height:1.55;
+}
+.rich-text:empty:before {
+  content: attr(data-placeholder);
+  color:#bbb; pointer-events:none;
+}
+.rich-text:focus { background:rgba(255,235,59,.1); }
+
 /* Print styles */
 @media print {
   body { background:#fff; padding:0; }
@@ -274,29 +308,68 @@ body {
 
 .editor-toolbar{
 position:sticky;top:0;z-index:999;
-display:flex;gap:6px;flex-wrap:wrap;
+display:flex;gap:6px;flex-wrap:wrap;align-items:center;
 background:#fff;padding:8px;border:1px solid #ccc;
 margin-bottom:10px;max-width:980px;width:100%;
 }
-.editor-toolbar button,.editor-toolbar select,.editor-toolbar input{
+.editor-toolbar button,.editor-toolbar select,.editor-toolbar input[type=color]{
 padding:6px;
 }
+/* Font size controls */
+.font-size-group{
+  display:flex;align-items:center;gap:3px;
+  border:1px solid #ccc;border-radius:4px;padding:2px 4px;background:#f5f5f5;
+}
+.font-size-group button{
+  width:26px;height:26px;font-size:15px;font-weight:bold;
+  border:none;background:transparent;cursor:pointer;padding:0;line-height:1;
+  border-radius:3px;
+}
+.font-size-group button:hover{background:#e0e0e0;}
+#fs-display{
+  min-width:30px;text-align:center;font-size:12px;font-weight:bold;color:#333;
+}
+/* Global scale slider */
+.scale-group{
+  display:flex;align-items:center;gap:5px;
+  border:1px solid #ccc;border-radius:4px;padding:3px 8px;background:#f5f5f5;
+  font-size:12px;
+}
+.scale-group label{font-weight:bold;color:#333;white-space:nowrap;}
+.scale-group input[type=range]{width:90px;cursor:pointer;}
+#scale-display{font-size:11px;color:#555;min-width:30px;}
 </style>
 </head>
 <body>
 
 
 <div class="editor-toolbar">
-<button onclick="document.execCommand('bold')">Bold</button>
-<button onclick="document.execCommand('italic')">Italic</button>
-<button onclick="document.execCommand('underline')">Underline</button>
-<button onclick="document.execCommand('justifyLeft')">Left</button>
-<button onclick="document.execCommand('justifyCenter')">Center</button>
-<button onclick="document.execCommand('justifyRight')">Right</button>
-<select onchange="document.execCommand('fontName',false,this.value)">
+<button onclick="document.execCommand('bold')" title="Bold">B</button>
+<button onclick="document.execCommand('italic')" title="Italic" style="font-style:italic">I</button>
+<button onclick="document.execCommand('underline')" title="Underline" style="text-decoration:underline">U</button>
+<button onclick="document.execCommand('justifyLeft')" title="Align Left">&#8676;</button>
+<button onclick="document.execCommand('justifyCenter')" title="Align Center">&#8700;</button>
+<button onclick="document.execCommand('justifyRight')" title="Align Right">&#8677;</button>
+<select onchange="document.execCommand('fontName',false,this.value)" title="Font">
 <option>Arial</option><option>Times New Roman</option><option>Calibri</option><option>Verdana</option>
 </select>
-<input type="color" onchange="document.execCommand('foreColor',false,this.value)">
+
+<!-- Font size for selected text -->
+<div class="font-size-group" title="Resize selected text">
+  <button onclick="changeFontSize(-1)">&#8722;</button>
+  <span id="fs-display">12px</span>
+  <button onclick="changeFontSize(1)">+</button>
+</div>
+
+<!-- Global sheet text scale -->
+<div class="scale-group" title="Scale all text in the sheet">
+  <label>Scale:</label>
+  <input type="range" id="global-scale" min="70" max="160" value="100" step="5"
+         oninput="applyGlobalScale(this.value)">
+  <span id="scale-display">100%</span>
+</div>
+
+<input type="color" onchange="document.execCommand('foreColor',false,this.value)" title="Text color">
 </div>
 <div class="edit-tip">Click any text to edit it directly</div>
 
@@ -391,7 +464,7 @@ padding:6px;
           <button class="img-remove" onclick="event.stopPropagation(); removeImage('dont')">Remove</button>
         </div>
         <div class="text-zone">
-          <textarea id="dont-text" placeholder="Enter description of what NOT to do..."></textarea>
+          <div id="dont-text" class="rich-text" contenteditable="true" data-placeholder="Enter description of what NOT to do..."></div>
         </div>
       </div>
     </div>
@@ -408,7 +481,7 @@ padding:6px;
           <button class="img-remove" onclick="event.stopPropagation(); removeImage('do')">Remove</button>
         </div>
         <div class="text-zone">
-          <textarea id="do-text" placeholder="Enter description of what TO do..."></textarea>
+          <div id="do-text" class="rich-text" contenteditable="true" data-placeholder="Enter description of what TO do..."></div>
         </div>
       </div>
     </div>
@@ -429,6 +502,21 @@ padding:6px;
 </div>
 
 <div id="toast"></div>
+
+<!-- Floating text format toolbar -->
+<div id="float-toolbar">
+  <button onmousedown="event.preventDefault(); fmt('bold')" title="Bold"><b>B</b></button>
+  <button onmousedown="event.preventDefault(); fmt('italic')" title="Italic"><i>I</i></button>
+  <button onmousedown="event.preventDefault(); fmt('underline')" title="Underline"><u>U</u></button>
+  <span class="ft-sep"></span>
+  <button onmousedown="event.preventDefault(); fmtSize(-2)" title="Smaller">A-</button>
+  <span id="ft-size">12</span>
+  <button onmousedown="event.preventDefault(); fmtSize(2)" title="Bigger">A+</button>
+  <span class="ft-sep"></span>
+  <button onmousedown="event.preventDefault(); fmt('justifyLeft')" title="Left">&#8676;</button>
+  <button onmousedown="event.preventDefault(); fmt('justifyCenter')" title="Center">&#8700;</button>
+  <button onmousedown="event.preventDefault(); fmt('justifyRight')" title="Right">&#8677;</button>
+</div>
 
 <script>
 // ── AI Knowledge Base ──
@@ -570,8 +658,8 @@ function generateOPL() {
     }
 
     document.getElementById('theme-input').value = data.theme;
-    document.getElementById('dont-text').value = data.donts;
-    document.getElementById('do-text').value = data.dos;
+    document.getElementById('dont-text').innerText = data.donts;
+    document.getElementById('do-text').innerText = data.dos;
 
     btn.disabled = false;
     btn.textContent = 'Generate OPL';
@@ -721,6 +809,8 @@ function resetForm() {
   });
 
   document.querySelectorAll('textarea').forEach(el => el.value = '');
+  document.getElementById('dont-text').innerHTML = '';
+  document.getElementById('do-text').innerHTML = '';
   document.getElementById('ai-topic').value = '';
 
   removeImage('dont');
@@ -734,6 +824,98 @@ function resetForm() {
   });
 
   showToast('Form reset to defaults');
+}
+
+// ── Floating format toolbar ──
+const floatBar = document.getElementById('float-toolbar');
+let currentFontPx = 12;
+let savedRange = null;
+const sizeStepping = [8,9,10,11,12,13,14,15,16,18,20,22,24,26,28,32,36,40,48,56,64,72];
+
+function fmt(cmd) {
+  document.execCommand('styleWithCSS', false, true);
+  document.execCommand(cmd, false, null);
+}
+
+function fmtSize(delta) {
+  // Step the size
+  let idx = sizeStepping.findIndex(s => s >= currentFontPx);
+  if (idx === -1) idx = 4;
+  idx = Math.max(0, Math.min(sizeStepping.length - 1, idx + (delta > 0 ? 1 : -1)));
+  currentFontPx = sizeStepping[idx];
+  document.getElementById('ft-size').textContent = currentFontPx;
+
+  if (!savedRange) return;
+
+  // Restore selection
+  const sel = window.getSelection();
+  sel.removeAllRanges();
+  sel.addRange(savedRange);
+
+  // Extract selected content, wrap in span, reinsert
+  const span = document.createElement('span');
+  span.style.fontSize = currentFontPx + 'px';
+  const frag = savedRange.extractContents();
+  span.appendChild(frag);
+  savedRange.insertNode(span);
+
+  // Update savedRange to cover the new span
+  const newRange = document.createRange();
+  newRange.selectNodeContents(span);
+  sel.removeAllRanges();
+  sel.addRange(newRange);
+  savedRange = newRange.cloneRange();
+}
+
+function showFloatBar(x, y) {
+  floatBar.style.display = 'flex';
+  const bw = floatBar.offsetWidth || 280;
+  floatBar.style.left = Math.min(x, window.innerWidth - bw - 10) + 'px';
+  floatBar.style.top  = (y - 52) + 'px';
+}
+
+document.addEventListener('mouseup', function(e) {
+  if (floatBar.contains(e.target)) return;
+  setTimeout(() => {
+    const sel = window.getSelection();
+    if (!sel || sel.isCollapsed || !sel.toString().trim()) {
+      floatBar.style.display = 'none';
+      return;
+    }
+    // Only show inside rich-text zones
+    let node = sel.anchorNode;
+    let inRich = false;
+    while (node) {
+      if (node.classList && node.classList.contains('rich-text')) { inRich = true; break; }
+      node = node.parentNode;
+    }
+    if (!inRich) { floatBar.style.display = 'none'; return; }
+
+    const range = sel.getRangeAt(0);
+    savedRange = range.cloneRange();
+    const rect  = range.getBoundingClientRect();
+    showFloatBar(rect.left + rect.width / 2 - 130, rect.top + window.scrollY);
+
+    // Detect current font size
+    const el = sel.anchorNode.nodeType === 3 ? sel.anchorNode.parentElement : sel.anchorNode;
+    const fs = parseFloat(window.getComputedStyle(el).fontSize);
+    if (fs) {
+      currentFontPx = fs;
+      document.getElementById('ft-size').textContent = Math.round(fs);
+    }
+  }, 10);
+});
+
+document.addEventListener('mousedown', function(e) {
+  if (!floatBar.contains(e.target) && !e.target.closest('.rich-text')) {
+    floatBar.style.display = 'none';
+  }
+});
+
+// ── Global scale ──
+function applyGlobalScale(val) {
+  document.getElementById('opl-sheet').style.fontSize = val + '%';
+  document.getElementById('scale-display').textContent = val + '%';
 }
 
 // ── Keyboard accessibility for contenteditable ──
