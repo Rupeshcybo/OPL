@@ -97,7 +97,7 @@ body {
   display:grid;
   grid-template-columns:170px 1fr 230px;
   border-bottom:2px solid #555;
-  min-height:88px;
+  min-height:180px;
 }
 .hdr-logo {
   border-right:2px solid #555;
@@ -130,24 +130,45 @@ body {
 
 /* Meta / Doc No section */
 .hdr-meta {
-  display:flex; flex-direction:column; justify-content:stretch;
+  display:flex;
+  flex-direction:column;
+  justify-content:flex-start;
+  overflow:visible;
 }
 .meta-row {
-  display:flex; align-items:stretch;
-  border-bottom:1.5px solid #555; flex:1;
+  display:flex;
+  align-items:center;
+  border-bottom:1.5px solid #555;
+  flex:1;
+  min-height:46px;
+  height:auto;
+  overflow:visible;
 }
 .meta-row:last-child { border-bottom:none; }
 .meta-lbl {
-  padding:4px 6px; white-space:nowrap;
-  font-size:11px; font-weight:bold; color:#111;
-  display:flex; align-items:center;
+  padding:10px 8px;
+  white-space:nowrap;
+  font-size:11px;
+  font-weight:bold;
+  color:#111;
+  display:flex;
+  align-items:center;
   border-right:1px solid #bbb;
   background:#f9f9f9;
+  line-height:1.4;
 }
 .meta-val {
-  border:none; background:transparent; font-size:11px;
-  font-family:Arial,sans-serif; color:#111; outline:none;
-  flex:1; padding:4px 6px;
+  border:none;
+  background:transparent;
+  font-size:11px;
+  font-family:Arial,sans-serif;
+  color:#111;
+  outline:none;
+  flex:1;
+  padding:10px 8px;
+  min-height:46px;
+  line-height:1.4;
+  overflow:visible;
 }
 
 /* ══ ROW 2: Classification ══ */
@@ -177,15 +198,28 @@ body {
 
 /* ══ ROW 3: Theme ══ */
 .theme-row {
-  border-bottom:1.5px solid #555; padding:5px 10px;
-  display:flex; align-items:center; gap:6px; min-height:28px; font-size:12px;
+  border-bottom:1.5px solid #555;
+  padding:8px 10px;
+  display:flex;
+  align-items:center;
+  gap:6px;
+  min-height:42px;
+  font-size:12px;
+  overflow:visible;
 }
 .theme-label { font-weight:bold; white-space:nowrap; }
 .theme-input {
-  border:none; border-bottom:1px solid #888;
-  background:transparent; font-size:12px;
-  font-family:Arial,sans-serif; color:#111;
-  outline:none; flex:1;
+  border:none;
+  border-bottom:1px solid #888;
+  background:transparent;
+  font-size:12px;
+  font-family:Arial,sans-serif;
+  color:#111;
+  outline:none;
+  flex:1;
+  min-height:28px;
+  line-height:1.4;
+  padding:4px 6px;
 }
 
 /* ══ ROW 4: Don'ts / Do's ══ */
@@ -338,46 +372,94 @@ padding:6px;
 .scale-group label{font-weight:bold;color:#333;white-space:nowrap;}
 .scale-group input[type=range]{width:90px;cursor:pointer;}
 #scale-display{font-size:11px;color:#555;min-width:30px;}
+
+@page { size:A4 portrait; margin:8mm; }
+
+#opl-sheet{
+  width:210mm !important;
+  min-height:297mm;
+  margin:auto;
+}
+
+.image-gallery{
+  display:flex;
+  gap:8px;
+  width:100%;
+  min-height:260px;
+  padding:8px;
+}
+.image-gallery.single .img-item{width:100%;}
+.image-gallery.double .img-item{width:50%;}
+.img-item{
+  border:2px solid #bdbdbd;
+  border-radius:12px;
+  overflow:hidden;
+  background:#fff;
+  min-height:250px;
+}
+.img-item img{
+  width:100%;
+  height:100%;
+  object-fit:contain;
+}
+
+@media print{
+ #opl-sheet{
+   width:210mm !important;
+   min-height:297mm !important;
+ }
+}
+
+
+/* Upload compatibility fixes */
+.img-zone{
+ overflow:visible !important;
+ position:relative;
+ min-height:280px;
+}
+.img-zone input[type=file]{
+ position:absolute !important;
+ top:0;left:0;
+ width:100%;height:100%;
+ opacity:0;
+ cursor:pointer;
+ z-index:20;
+}
+.img-preview{
+ width:100% !important;
+ height:100% !important;
+ max-width:100% !important;
+ max-height:100% !important;
+ object-fit:contain !important;
+ display:block;
+ border-radius:12px;
+}
+.upload-btn{
+ position:absolute;
+ bottom:8px;
+ right:8px;
+ z-index:25;
+ background:#1565c0;
+ color:#fff;
+ border:none;
+ padding:6px 12px;
+ border-radius:6px;
+}
+
+
+/* Hide image remove button during PDF/Image export */
+.exporting .img-remove,
+@media print {
+  .img-remove{
+    display:none !important;
+    visibility:hidden !important;
+  }
+}
+
 </style>
 </head>
 <body>
 
-
-<div class="editor-toolbar">
-<button onclick="document.execCommand('bold')" title="Bold">B</button>
-<button onclick="document.execCommand('italic')" title="Italic" style="font-style:italic">I</button>
-<button onclick="document.execCommand('underline')" title="Underline" style="text-decoration:underline">U</button>
-<button onclick="document.execCommand('justifyLeft')" title="Align Left">&#8676;</button>
-<button onclick="document.execCommand('justifyCenter')" title="Align Center">&#8700;</button>
-<button onclick="document.execCommand('justifyRight')" title="Align Right">&#8677;</button>
-<select onchange="document.execCommand('fontName',false,this.value)" title="Font">
-<option>Arial</option><option>Times New Roman</option><option>Calibri</option><option>Verdana</option>
-</select>
-
-<!-- Font size for selected text -->
-<div class="font-size-group" title="Resize selected text">
-  <button onclick="changeFontSize(-1)">&#8722;</button>
-  <span id="fs-display">12px</span>
-  <button onclick="changeFontSize(1)">+</button>
-</div>
-
-<!-- Global sheet text scale -->
-<div class="scale-group" title="Scale all text in the sheet">
-  <label>Scale:</label>
-  <input type="range" id="global-scale" min="70" max="160" value="100" step="5"
-         oninput="applyGlobalScale(this.value)">
-  <span id="scale-display">100%</span>
-</div>
-
-<input type="color" onchange="document.execCommand('foreColor',false,this.value)" title="Text color">
-</div>
-<div class="edit-tip">Click any text to edit it directly</div>
-
-<div class="action-bar">
-  <button class="btn-pdf"   onclick="downloadPDF()">Download PDF</button>
-  <button class="btn-img"   onclick="downloadImage()">Download Image</button>
-  <button class="btn-reset" onclick="resetForm()">Reset</button>
-</div>
 
 <div id="opl-sheet">
 
@@ -455,7 +537,7 @@ padding:6px;
       <div class="col-hdr" contenteditable="true">Don'ts</div>
       <div class="col-body">
         <div class="img-zone" onclick="document.getElementById('dont-img-input').click()">
-          <input type="file" id="dont-img-input" accept="image/*" onchange="handleImageUpload(this, 'dont')">
+          <input type="file" id="dont-img-input" accept=".jpg,.jpeg,.png,.bmp,.webp,.gif" onchange="handleImageUpload(this, 'dont')">
           <div class="img-hint">
             <span class="icon">+</span>
             <span>Click to upload image</span>
@@ -472,7 +554,7 @@ padding:6px;
       <div class="col-hdr" contenteditable="true">Do's</div>
       <div class="col-body">
         <div class="img-zone" onclick="document.getElementById('do-img-input').click()">
-          <input type="file" id="do-img-input" accept="image/*" onchange="handleImageUpload(this, 'do')">
+          <input type="file" id="do-img-input" accept=".jpg,.jpeg,.png,.bmp,.webp,.gif" onchange="handleImageUpload(this, 'do')">
           <div class="img-hint">
             <span class="icon">+</span>
             <span>Click to upload image</span>
@@ -500,6 +582,44 @@ padding:6px;
   </div>
 
 </div>
+
+<div class="editor-toolbar">
+<button onclick="document.execCommand('bold')" title="Bold">B</button>
+<button onclick="document.execCommand('italic')" title="Italic" style="font-style:italic">I</button>
+<button onclick="document.execCommand('underline')" title="Underline" style="text-decoration:underline">U</button>
+<button onclick="document.execCommand('justifyLeft')" title="Align Left">&#8676;</button>
+<button onclick="document.execCommand('justifyCenter')" title="Align Center">&#8700;</button>
+<button onclick="document.execCommand('justifyRight')" title="Align Right">&#8677;</button>
+<select onchange="document.execCommand('fontName',false,this.value)" title="Font">
+<option>Arial</option><option>Times New Roman</option><option>Calibri</option><option>Verdana</option>
+</select>
+
+<!-- Font size for selected text -->
+<div class="font-size-group" title="Resize selected text">
+  <button onclick="changeFontSize(-1)">&#8722;</button>
+  <span id="fs-display">12px</span>
+  <button onclick="changeFontSize(1)">+</button>
+</div>
+
+<!-- Global sheet text scale -->
+<div class="scale-group" title="Scale all text in the sheet">
+  <label>Scale:</label>
+  <input type="range" id="global-scale" min="70" max="160" value="100" step="5"
+         oninput="applyGlobalScale(this.value)">
+  <span id="scale-display">100%</span>
+</div>
+
+<input type="color" onchange="document.execCommand('foreColor',false,this.value)" title="Text color">
+</div>
+<div class="edit-tip">Click any text to edit it directly</div>
+
+<div class="action-bar">
+  <button class="btn-pdf"   onclick="downloadPDF()">Download PDF</button>
+  <button class="btn-img"   onclick="downloadImage()">Download Image</button>
+  <button class="btn-reset" onclick="resetForm()">Reset</button>
+</div>
+
+
 
 <div id="toast"></div>
 
@@ -944,3 +1064,9 @@ document.addEventListener('DOMContentLoaded', function(){
 </script>
 </body>
 </html>
+
+<script>
+document.addEventListener('click',()=>{
+ setTimeout(()=>document.body.classList.remove('exporting'),3000);
+});
+</script>
